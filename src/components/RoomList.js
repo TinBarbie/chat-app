@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../helpers/AuthContext"
+import toast from "react-hot-toast"
 
 const RoomList = ({ socket }) => {
     const [rooms, setRooms] = useState([])
@@ -20,7 +21,7 @@ const RoomList = ({ socket }) => {
     }, [])
 
     const handleJoinRoom = async (room) => {
-        await axios.post(process.env.REACT_APP_BACKEND_URL + "userrooms", {
+        await axios.post(process.env.REACT_APP_BACKEND_URL + "rooms/userroom", {
             userId: authState.id,
             roomId: room.id
         })

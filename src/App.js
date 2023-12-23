@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast"
 import axios from "axios";
 import io from "socket.io-client"
+import RoomCall from "./pages/RoomCall";
 
 const socket = io.connect("http://localhost:3001")
 
@@ -67,8 +68,9 @@ function App() {
           )}
         </div>
         <Routes>
-          <Route path="/" exact element={<Home socket={socket}/>} />
+          <Route path="/" exact element={<Home socket={socket} />} />
           <Route path="/room/:id" exact element={<RoomPage socket={socket} />} />
+          <Route path="/roomcall/:id" exact element={<RoomCall socket={socket} />} />
           <Route path="/login" exact element={<Login />} />
           <Route path="/registration" exact element={<Registration />} />
         </Routes>

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../helpers/AuthContext";
 import toast from "react-hot-toast";
@@ -11,26 +11,31 @@ function Login() {
 
     let navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const data = { username: username, password: password };
-        axios.post("http://localhost:3001/users/login", data).then((response) => {
-            if (response.data.error) {
-                alert(response.data.error);
-            } else {
-                toast.success("Login successfully!")
-                localStorage.setItem("accessToken", response.data.token);
-                
-                setTimeout(() => {
-                    setAuthState({
-                        username: response.data.username,
-                        id: response.data.id,
-                        status: true,
-                    });
-                    navigate("/");
-                }, 2000)
-            }
-        });
+        try {
+            await axios.post("http://localhost:3001/users/login", data).then((response) => {
+                console.log(response.data);
+                if (response.data.error) {
+                    alert(response.data.error);
+                } else {
+                    toast.success("Login successfully!")
+                    localStorage.setItem("accessToken", response.data.token);
+
+                    setTimeout(() => {
+                        setAuthState({
+                            username: response.data.username,
+                            id: response.data.id,
+                            status: true,
+                        });
+                        navigate("/");
+                    }, 2000)
+                }
+            });
+        } catch (error) {
+            toast.error(error.response.data.error);
+        }
     };
     return (
         <div className="h-screen flex flex-col items-center justify-center bg-cyan-200">
