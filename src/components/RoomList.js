@@ -6,7 +6,7 @@ import toast from "react-hot-toast"
 
 const RoomList = ({ socket }) => {
     const [rooms, setRooms] = useState([])
-    const { authState } = useContext(AuthContext);
+    const { authState, setAuthState } = useContext(AuthContext);
 
     const navigate = useNavigate()
     useEffect(() => {
@@ -21,9 +21,10 @@ const RoomList = ({ socket }) => {
     }, [])
 
     const handleJoinRoom = async (room) => {
-        await axios.post(process.env.REACT_APP_BACKEND_URL + "rooms/userroom", {
+        await axios.post(process.env.REACT_APP_BACKEND_URL + "userrooms", {
             userId: authState.id,
-            roomId: room.id
+            roomId: room.id,
+            userSocketId: socket.id
         })
         const userData = {
             room: room.name,
