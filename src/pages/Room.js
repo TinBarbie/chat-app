@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../helpers/AuthContext";
 import toast from "react-hot-toast";
-
+import { ArrowDownToLine } from "lucide-react"
 
 const RoomPage = ({ socket }) => {
     let { id } = useParams();
@@ -12,9 +12,11 @@ const RoomPage = ({ socket }) => {
 
     const [chats, setChats] = useState([])
     const [description, setDescription] = useState("")
+    const [uploadedFile, setUploadedFile] = useState()
     const [room, setRoom] = useState("")
     const [currentUsers, setCurrentUsers] = useState([])
     const chatRef = useRef(null)
+    const lastMessageRef = useRef(null);
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -22,10 +24,15 @@ const RoomPage = ({ socket }) => {
             await axios.get(process.env.REACT_APP_BACKEND_URL + `chats/${roomId}`).then((res) => {
                 if (res.data) {
                     const chatList = res.data.map(data => {
-                        const chatInstance = {
+                        let chatInstance = {
                             room: data.Room.name,
-                            author: data.User.name,
-                            message: data.description
+                            author: data.User.name
+                        }
+                        if (data.description) {
+                            chatInstance.message = data.description
+                        } else {
+                            chatInstance.filename = data.filename
+                            chatInstance.originalName = data.originalName
                         }
                         return chatInstance
                     })
@@ -78,31 +85,48 @@ const RoomPage = ({ socket }) => {
             socket.removeListener('kick_user')
         }
     }, [socket])
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         toast.success("Message is sent!")
-        if (chatRef.current) {
-            chatRef.current.value = ""
-        }
-        const messageData = {
-            room: room.name,
-            author: authState.username,
-            message: description,
+        let formToSubmit = new FormData()
+        formToSubmit.append("userId", authState.id)
+        formToSubmit.append("roomId", room.id)
+
+        let messageData
+
+        if (!uploadedFile) {
+            if (chatRef.current) {
+                chatRef.current.value = ""
+            }
+            formToSubmit.append("description", description)
+            messageData = {
+                room: room.name,
+                author: authState.username,
+                message: description,
+            }
+        } else {
+            formToSubmit.append("filename", uploadedFile)
+            messageData = {
+                room: room.name,
+                author: authState.username,
+                originalName: uploadedFile.name,
+            }
         }
 
-        await axios.post(process.env.REACT_APP_BACKEND_URL + `chats`, {
-            roomId: room.id,
-            userId: authState.id,
-            description: description
-        }).then((res) => {
+        await axios.post(process.env.REACT_APP_BACKEND_URL + `chats`, formToSubmit).then((res) => {
             if (!res.data.error) {
+                messageData.filename = res.data.filename
                 setChats((chats) => [...chats, messageData])
             }
         })
         await socket.emit("send_message", messageData)
 
-        var elem = document.getElementById('chatFrame');
-        elem.scrollTop = elem.scrollHeight;
+        setUploadedFile(null)
+
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     const handleLeaveRoom = async (e) => {
@@ -126,6 +150,16 @@ const RoomPage = ({ socket }) => {
         navigate(`/roomcall/${room.id}`)
     }
 
+    const handleUploadFile = (e) => {
+        e.preventDefault()
+        document.getElementById("file-upload").click()
+    }
+
+    function getFileName(filepath) {
+        if (!filepath.includes("\\")) return filepath
+        return filepath.split("\\")[1]
+    }
+    console.log(chats);
     return (
 
         <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 px-10">
@@ -148,16 +182,21 @@ const RoomPage = ({ socket }) => {
                                     </div>
                                 ))}
                             </div>
-                            <div id="chatFrame" className="w-[500px] h-[400px] overflow-y-scroll flex border border-solid border-blue-500 px-2 py-5">
+                            <div className="w-[500px] h-[400px] overflow-y-scroll flex border border-solid border-blue-500 px-2 py-5">
                                 <div className="flex flex-col items-center gap-2">
                                     {chats.map((chat, id) => (
-                                        <div key={id} className="flex items-center">
+                                        <div key={id} ref={id === chats.length - 1 ? lastMessageRef : null} className="flex items-center">
                                             <p className={`${listOfColors[id % 4]}`}>
                                                 {chat.author}:
                                             </p>
-                                            <div className="w-fit h-10 rounded-2xl p-2">
-                                                <p className={`${listOfColors[id % 4]} text-right lg:w-[350px] w-[150px]`}>
-                                                    {chat.message}
+                                            <div className="h-10 lg:w-[350px] w-[150px] rounded-2xl p-2 flex items-center justify-end gap-4">
+                                                <a
+                                                    href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`}
+                                                    className={`${chat.message ? "hidden" : ""} h-10 w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
+                                                    <ArrowDownToLine size={20} />
+                                                </a>
+                                                <p className={`${listOfColors[id % 4]} text-right`}>
+                                                    {chat.message ? chat.message : getFileName(chat.originalName)}
                                                 </p>
                                             </div>
                                         </div>
@@ -165,22 +204,42 @@ const RoomPage = ({ socket }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-5 w-full">
+                            <form className="flex justify-evenly w-full pb-[52px]" onSubmit={handleSubmit} encType="multipart/form-data">
+                                <div className="flex items-center gap-5">
+                                    <label htmlFor="description">
+                                        Input Message
+                                    </label>
+                                    <textarea
+                                        ref={chatRef}
+                                        type="text"
+                                        name="description"
+                                        id="description"
+                                        placeholder="Input message"
+                                        className="h-[60px] w-[250px]"
+                                        onChange={(e) => { setDescription(e.target.value) }} />
+                                    <div className="flex items-center gap-4">
+                                        <label htmlFor="file-upload">
+                                            Upload File
+                                        </label>
+                                        <button
+                                            onClick={handleUploadFile}
+                                            className="cursor-pointer h-[52px] w-[100px] bg-green-400 hover:bg-green-600 text-white flex items-center justify-center rounded-xl">
+                                            Choose File
+                                        </button>
+                                        <input type="file" id="file-upload" hidden onChange={(e) => { setUploadedFile(e.target.files[0]) }} />
+                                        {uploadedFile && (
+                                            <p>{uploadedFile.name}</p>
+                                        )}
+                                    </div>
+                                </div>
 
-                            <form className="flex items-center gap-5 pb-[52px]" onSubmit={handleSubmit}>
-                                <textarea
-                                    ref={chatRef}
-                                    type="text"
-                                    name="description"
-                                    id="description"
-                                    placeholder="Input message"
-                                    className="h-[60px] w-[250px]"
-                                    onChange={(e) => { setDescription(e.target.value) }} />
-                                <button type="submit" disabled={description === ""} className="cursor-pointer h-[52px] w-[100px] bg-blue-400 hover:bg-blue-600 text-white flex items-center justify-center rounded-xl">
+                                <button type="submit"
+                                    className={`${(description === "" && !uploadedFile) ? "bg-gray-400 cursor-default" : "cursor-pointer bg-blue-400 hover:bg-blue-600"} h-[52px] w-[100px] text-white flex items-center justify-center rounded-xl`}>
                                     Send
                                 </button>
                             </form>
-                            <div className="flex gap-10 w-full">
+                            <div className="flex justify-center gap-10 w-full">
                                 <button onClick={handleJoinCall} className="cursor-pointer h-[52px] w-[200px] bg-amber-200 hover:bg-amber-400 text-black flex items-center justify-center rounded-xl">
                                     Join room video call
                                 </button>
