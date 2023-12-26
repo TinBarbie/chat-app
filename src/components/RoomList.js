@@ -2,11 +2,10 @@ import { useContext, useEffect, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../helpers/AuthContext"
-import toast from "react-hot-toast"
 
 const RoomList = ({ socket }) => {
     const [rooms, setRooms] = useState([])
-    const { authState, setAuthState } = useContext(AuthContext);
+    const { authState } = useContext(AuthContext);
 
     const navigate = useNavigate()
     useEffect(() => {

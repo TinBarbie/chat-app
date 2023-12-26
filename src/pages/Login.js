@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../helpers/AuthContext";
 import toast from "react-hot-toast";
@@ -16,7 +16,6 @@ function Login() {
         const data = { username: username, password: password };
         try {
             await axios.post("http://localhost:3001/users/login", data).then((response) => {
-                console.log(response.data);
                 if (response.data.error) {
                     alert(response.data.error);
                 } else {

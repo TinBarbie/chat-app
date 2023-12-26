@@ -59,7 +59,7 @@ const RoomPage = ({ socket }) => {
 
         getChatsByRoomId(id)
         getRoomById(id)
-    }, [])
+    }, [id])
 
     useEffect(() => {
         socket.on("receive_message", (data) => {
@@ -159,7 +159,7 @@ const RoomPage = ({ socket }) => {
         if (!filepath.includes("\\")) return filepath
         return filepath.split("\\")[1]
     }
-    console.log(chats);
+
     return (
 
         <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 px-10">
@@ -195,7 +195,7 @@ const RoomPage = ({ socket }) => {
                                                     className={`${chat.message ? "hidden" : ""} h-10 w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
                                                     <ArrowDownToLine size={20} />
                                                 </a>
-                                                <p className={`${listOfColors[id % 4]} text-right`}>
+                                                <p className={`${listOfColors[id % 4]} text-right max-w-[200px]`}>
                                                     {chat.message ? chat.message : getFileName(chat.originalName)}
                                                 </p>
                                             </div>

@@ -1,14 +1,12 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../helpers/AuthContext";
 import toast from "react-hot-toast";
 
 function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [retypePW, setRetypePW] = useState("");
-    const { setAuthState } = useContext(AuthContext);
 
     let navigate = useNavigate();
 
