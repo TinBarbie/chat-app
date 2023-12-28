@@ -189,7 +189,7 @@ const RoomPage = ({ socket }) => {
                                             <p className={`${listOfColors[id % 4]}`}>
                                                 {chat.author}:
                                             </p>
-                                            <div className="h-10 lg:w-[350px] w-[150px] rounded-2xl p-2 flex items-center justify-end gap-4">
+                                            <div className="h-10 flex-1 w-[350px] rounded-2xl p-2 flex items-center justify-end gap-4">
                                                 <a
                                                     href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`}
                                                     className={`${chat.message ? "hidden" : ""} h-10 w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
