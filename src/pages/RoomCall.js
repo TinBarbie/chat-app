@@ -1,10 +1,9 @@
 import axios from "axios";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../helpers/AuthContext";
 import Peer from "simple-peer";
-import Video from "../components/Video";
-import { toast } from "react-hot-toast";
+import { toast } from "react-hot-toast"
 
 const RoomCall = ({ socket }) => {
     let { id } = useParams();
@@ -14,7 +13,6 @@ const RoomCall = ({ socket }) => {
 
     const [room, setRoom] = useState("");
     const [stream, setStream] = useState();
-    const [userStream, setUserStream] = useState();
     const [me, setMe] = useState("")
     const [currentUsers, setCurrentUsers] = useState([]);
     const [receivingCall, setReceivingCall] = useState(false)
@@ -24,8 +22,8 @@ const RoomCall = ({ socket }) => {
     const [idToCall, setIdToCall] = useState("")
     const [callEnded, setCallEnded] = useState(false)
     const [name, setName] = useState("")
-    const myVideo = useRef()
-    const userVideo = useRef()
+    const myVideo = useRef(null)
+    const userVideo = useRef(null)
     const connectionRef = useRef()
 
     useEffect(() => {
@@ -47,31 +45,20 @@ const RoomCall = ({ socket }) => {
 
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
             setStream(stream)
+            if (myVideo.current) myVideo.current.srcObject = stream
         })
 
-        socket.on("me", (id) => {
-            setMe(id)
-        })
+        getRoomById(id)
+        setMe(socket.id)
 
         socket.on("call_user", (data) => {
+            console.log("receiving call from: ", data.name)
             setReceivingCall(true)
             setCaller(data.from)
             setName(data.name)
             setCallerSignal(data.signal)
         })
-
-        getRoomById(id)
-    }, [])
-
-    useEffect(() => {
-        if (stream) {
-            myVideo.current.srcObject = stream
-        }
-    }, [stream])
-
-    useEffect(() => {
         socket.on("update_user", (data) => {
-            console.log(data)
             toast.success(`${data.author} just joined the room`)
             setCurrentUsers((users) => [...users, {
                 username: data.author,
@@ -82,14 +69,40 @@ const RoomCall = ({ socket }) => {
         socket.on("kick_user", (data) => {
             toast.error(`${data.author} just left the room`)
             setCurrentUsers((users) => users.filter((user) => user.username !== data.author))
+            if (connectionRef.current) {
+                connectionRef.current = null
+                setCallAccepted(false)
+                setCallEnded(true)
+            }
         })
+
+        socket.on("end_call", () => {
+            connectionRef.current = null
+            setCallAccepted(false)
+            setCallEnded(true)
+        })
+
         return () => {
+            socket.removeListener('me')
+            socket.removeListener('call_user')
             socket.removeListener('update_user')
             socket.removeListener('kick_user')
+            socket.removeListener("end_call")
         }
-    }, [socket])
+    }, [])
 
-    const callUser = (id) => {
+    useEffect(() => {
+        if (!userVideo.current && callAccepted && !callEnded) {
+            console.log("caller has ended the call")
+            setCallEnded(true)
+            setCallAccepted(false)
+            connectionRef.current = null
+        }
+    }, [userVideo])
+
+    const callUser = (id, myname, username) => {
+        setIdToCall(id)
+        setName(username)
         const peer = new Peer({
             initiator: true,
             trickle: false,
@@ -100,12 +113,13 @@ const RoomCall = ({ socket }) => {
                 userToCall: id,
                 signalData: data,
                 from: me,
-                name: name
+                name: myname
             })
         })
         peer.on("stream", (uStream) => {
-            userVideo.current.srcObject = uStream
-
+            if (userVideo.current) {
+                userVideo.current.srcObject = uStream
+            }
         })
         socket.on("call_accepted", (signal) => {
             setCallAccepted(true)
@@ -116,6 +130,8 @@ const RoomCall = ({ socket }) => {
     }
 
     const answerCall = () => {
+        setIdToCall(caller)
+        setReceivingCall(false)
         setCallAccepted(true)
         const peer = new Peer({
             initiator: false,
@@ -126,17 +142,20 @@ const RoomCall = ({ socket }) => {
             socket.emit("answer_call", { signal: data, to: caller })
         })
         peer.on("stream", (uStream) => {
-            userVideo.current.srcObject = uStream
-
+            if (userVideo.current) {
+                userVideo.current.srcObject = uStream
+            }
         })
 
         peer.signal(callerSignal)
         connectionRef.current = peer
     }
 
-    const leaveCall = () => {
+    const cancelCall = () => {
+        setCallAccepted(false)
         setCallEnded(true)
-        connectionRef.current.destroy()
+        connectionRef.current = null
+        socket.emit("end_call", idToCall)
     }
 
     const handleLeaveRoom = async (e) => {
@@ -156,9 +175,6 @@ const RoomCall = ({ socket }) => {
 
         navigate("/")
     }
-    console.log("call accepted: ", callAccepted)
-    console.log(myVideo)
-    console.log(userVideo)
 
     return (
         <div className="flex flex-col min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 px-10">
@@ -173,42 +189,52 @@ const RoomCall = ({ socket }) => {
                             <p className={`${listOfColors[i % 4]} text-[32px]`}>
                                 {data.username}
                             </p>
-                            {data.username !== authState.username && (
-                                <button onClick={() => callUser(data.userSocketId)} className="cursor-pointer h-[52px] w-[100px] bg-amber-200 hover:bg-amber-400 text-black flex items-center justify-center rounded-xl">
-                                    Call
-                                </button>
+                            {data.username.toLowerCase() !== authState.username.toLowerCase() && (
+                                <>
+                                    <button onClick={() => callUser(data.userSocketId, authState.username, data.username)} className="cursor-pointer h-[52px] w-[100px] bg-amber-200 hover:bg-amber-400 text-black flex items-center justify-center rounded-xl">
+                                        Call
+                                    </button>
+                                </>
                             )}
                         </div>
                     ))}
                 </div>
-                <div>
-                    {receivingCall && !callAccepted ? (
-                        <>
-                            <h1 >{name} is calling...</h1>
-                            <button onClick={answerCall} className="cursor-pointer h-[52px] w-[100px] bg-green-200 hover:bg-green-400 text-black flex items-center justify-center rounded-xl">
-                                Answer Call
-                            </button>
-                        </>
-                    ) : null}
-                </div>
-                <div className="grid grid-cols-2">
-                    <div className="flex flex-col items-center">
-                        <h3 className="text-2xl text-red-400">
-                            {authState.username}
-                        </h3>
-                        {stream && <video playsInline muted ref={myVideo} autoPlay className="w-[300px]" />}
+                <div className="flex flex-col items-center gap-4 border border-solid border-[#333]">
+                    <div>
+                        {receivingCall && !callAccepted ? (
+                            <>
+                                <h1 >{name} is calling...</h1>
+                                <button onClick={answerCall} className="cursor-pointer h-[52px] w-[100px] bg-green-200 hover:bg-green-400 text-black flex items-center justify-center rounded-xl">
+                                    Answer Call
+                                </button>
+                            </>
+                        ) : null}
                     </div>
-                    {(callAccepted && !callEnded) ? (
+                    <div className="grid grid-cols-2">
                         <div className="flex flex-col items-center">
-                            <h3 className="text-2xl text-blue-400">
+                            <h3 className="text-2xl text-red-400">
                                 {authState.username}
                             </h3>
-                            {userVideo.current && <video playsInline ref={userVideo} autoPlay className="w-[400px]" />}
+                            {stream && <video playsInline muted ref={myVideo} autoPlay className="w-[300px] h-auto" />}
                         </div>
+
+                        {(callAccepted && !callEnded) ? (
+                            <div className="flex flex-col items-center">
+                                <h3 className="text-2xl text-blue-400">
+                                    {name}
+                                </h3>
+                                <video playsInline ref={userVideo} autoPlay className="w-[300px]" />
+                            </div>
+                        ) : null}
+                    </div>
+                    {(callAccepted && !callEnded) ? (
+                        <button onClick={cancelCall} className="cursor-pointer h-[52px] w-[200px] bg-red-200 hover:bg-red-400 text-black flex items-center justify-center rounded-xl">
+                            Cancel Call
+                        </button>
                     ) : null}
                 </div>
             </div>
-            <button onClick={handleLeaveRoom} className="mx-auto cursor-pointer h-[52px] w-[200px] bg-red-400 hover:bg-red-600 text-white flex items-center justify-center rounded-xl">
+            <button onClick={handleLeaveRoom} className="mx-auto mt-10 cursor-pointer h-[52px] w-[200px] bg-red-400 hover:bg-red-600 text-white flex items-center justify-center rounded-xl">
                 Leave Room
             </button>
         </div>
