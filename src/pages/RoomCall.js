@@ -217,7 +217,7 @@ const RoomCall = ({ socket }) => {
                             <h3 className="text-2xl text-red-400">
                                 {authState.username}
                             </h3>
-                            {stream && <video playsInline muted ref={myVideo} autoPlay className="w-[300px]" />}
+                            <video playsInline ref={myVideo} autoPlay className="w-[300px]" />
                         </div>
 
                         {(callAccepted && !callEnded) ? (
