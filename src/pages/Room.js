@@ -16,6 +16,7 @@ const RoomPage = ({ socket }) => {
     const [room, setRoom] = useState("")
     const [currentUsers, setCurrentUsers] = useState([])
     const chatRef = useRef(null)
+    const fileRef = useRef(null)
     const lastMessageRef = useRef(null);
     const navigate = useNavigate()
 
@@ -119,6 +120,9 @@ const RoomPage = ({ socket }) => {
                 messageData.filename = res.data.filename
                 setChats((chats) => [...chats, messageData])
             }
+        }).catch(() => {
+            toast.error("Your upload file is over 1MB! Upload again with limited one")
+            fileRef.current.value = null
         })
         await socket.emit("send_message", messageData)
 
@@ -227,7 +231,7 @@ const RoomPage = ({ socket }) => {
                                             className="cursor-pointer h-[52px] w-[100px] bg-green-400 hover:bg-green-600 text-white flex items-center justify-center rounded-xl">
                                             Choose File
                                         </button>
-                                        <input type="file" id="file-upload" hidden onChange={(e) => { setUploadedFile(e.target.files[0]) }} />
+                                        <input ref={fileRef} type="file" id="file-upload" hidden onChange={(e) => { setUploadedFile(e.target.files[0]) }} />
                                         {uploadedFile && (
                                             <p>{uploadedFile.name}</p>
                                         )}
