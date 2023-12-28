@@ -15,7 +15,7 @@ function Login() {
         e.preventDefault();
         const data = { username: username, password: password };
         try {
-            await axios.post("http://localhost:3001/users/login", data).then((response) => {
+            await axios.post(process.env.REACT_APP_BACKEND_URL + "users/login", data).then((response) => {
                 if (response.data.error) {
                     alert(response.data.error);
                 } else {

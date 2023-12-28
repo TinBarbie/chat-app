@@ -18,7 +18,7 @@ function Login() {
             return;
         }
         const data = { username: username, password: password };
-        axios.post("http://localhost:3001/users", data).then((response) => {
+        axios.post(process.env.REACT_APP_BACKEND_URL + "users", data).then((response) => {
             if (response.data.error) {
                 toast.error(response.data.error);
             } else {

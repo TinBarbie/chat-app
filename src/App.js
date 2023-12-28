@@ -11,7 +11,7 @@ import axios from "axios";
 import io from "socket.io-client"
 import RoomCall from "./pages/RoomCall";
 
-const socket = io.connect("http://localhost:3001")
+const socket = io.connect(process.env.REACT_APP_SOCKET_URL)
 
 function App() {
   const [authState, setAuthState] = useState({
@@ -22,7 +22,7 @@ function App() {
 
   useEffect(() => {
     const getUserIdentity = async () => {
-      await axios.get("http://localhost:3001/users/auth", {
+      await axios.get(process.env.REACT_APP_BACKEND_URL + "users/auth", {
         headers: {
           accessToken: localStorage.getItem("accessToken"),
         },

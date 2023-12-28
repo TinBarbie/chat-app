@@ -28,7 +28,7 @@ const RoomCall = ({ socket }) => {
 
     useEffect(() => {
         const getRoomById = async (roomId) => {
-            await axios.get(`http://localhost:3001/rooms/${roomId}`).then((res) => {
+            await axios.get(`${process.env.REACT_APP_BACKEND_URL}rooms/${roomId}`).then((res) => {
                 if (res.data) {
                     setRoom(res.data)
                     const users = res.data.Users.map((user) => {
