@@ -45,6 +45,7 @@ const RoomCall = ({ socket }) => {
 
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
             setStream(stream)
+            console.log(stream)
             if (myVideo.current) myVideo.current.srcObject = stream
         })
 
@@ -176,6 +177,7 @@ const RoomCall = ({ socket }) => {
         navigate("/")
     }
 
+    console.log(myVideo)
     return (
         <div className="flex flex-col min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 px-10">
             <h1 className="text-[52px] text-red-400 mx-auto">Video {room.name}</h1>
@@ -215,7 +217,7 @@ const RoomCall = ({ socket }) => {
                             <h3 className="text-2xl text-red-400">
                                 {authState.username}
                             </h3>
-                            {stream && <video playsInline muted ref={myVideo} autoPlay className="w-[300px] h-auto" />}
+                            {stream && <video playsInline muted ref={myVideo} autoPlay className="w-[300px]" />}
                         </div>
 
                         {(callAccepted && !callEnded) ? (
