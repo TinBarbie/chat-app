@@ -183,7 +183,7 @@ const RoomPage = ({ socket }) => {
                                 ))}
                             </div>
                             <div className="min-w-[450px] w-[500px] h-[400px] overflow-y-scroll flex border border-solid border-blue-500 px-2 py-5">
-                                <div className="flex flex-col items-center gap-2">
+                                <div className="flex flex-col items-center gap-2 w-full">
                                     {chats.map((chat, id) => (
                                         <div key={id} ref={id === chats.length - 1 ? lastMessageRef : null} className="flex items-center">
                                             <p className={`${listOfColors[id % 4]}`}>
