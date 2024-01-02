@@ -34,7 +34,7 @@ const RoomList = ({ socket }) => {
         navigate(`/room/${room.id}`)
     }
     return (
-        <div className="w-[400px] flex flex-col gap-5">
+        <div className="sm:w-[400px] w-full flex flex-col gap-5">
             {rooms.map((room) => (
                 <button
                     key={room.id}

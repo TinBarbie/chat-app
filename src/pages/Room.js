@@ -89,7 +89,6 @@ const RoomPage = ({ socket }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        toast.success("Message is sent!")
         let formToSubmit = new FormData()
         formToSubmit.append("userId", authState.id)
         formToSubmit.append("roomId", room.id)
@@ -123,6 +122,8 @@ const RoomPage = ({ socket }) => {
         }).catch(() => {
             toast.error("Your upload file is over 1MB! Upload again with limited one")
             fileRef.current.value = null
+        }).finally(() => {
+            toast.success("Message is sent!")
         })
         await socket.emit("send_message", messageData)
 
@@ -166,16 +167,16 @@ const RoomPage = ({ socket }) => {
 
     return (
 
-        <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 px-10">
+        <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 md:px-10 px-4">
             <div className="flex flex-col items-center gap-10">
                 {authState.status ? (
                     <>
                         <h1 className="text-red-400 text-[52px]">
                             {room.name}
                         </h1>
-                        <div className="flex w-full">
-                            <div className="w-[800px] flex flex-col gap-4">
-                                <h3 className="text-red-400 text-[32px] pb-10">
+                        <div className="flex max-md:flex-col max-md:gap-4 w-full">
+                            <div className="md:w-[800px] w-full flex flex-col gap-4">
+                                <h3 className="text-red-400 text-[32px]">
                                     current users in this room:
                                 </h3>
                                 {currentUsers.map((data, i) => (
@@ -186,14 +187,14 @@ const RoomPage = ({ socket }) => {
                                     </div>
                                 ))}
                             </div>
-                            <div className="min-w-[450px] w-[500px] h-[400px] overflow-y-scroll flex border border-solid border-blue-500 px-2 py-5">
+                            <div className="md:min-w-[450px] md:w-[500px] w-full h-[400px] overflow-y-scroll flex border border-solid border-blue-500 px-2 py-5">
                                 <div className="flex flex-col items-center gap-2 w-full">
                                     {chats.map((chat, id) => (
-                                        <div key={id} ref={id === chats.length - 1 ? lastMessageRef : null} className="flex items-center">
+                                        <div key={id} ref={id === chats.length - 1 ? lastMessageRef : null} className="flex items-center w-full justify-between">
                                             <p className={`${listOfColors[id % 4]}`}>
                                                 {chat.author}:
                                             </p>
-                                            <div className="h-10 flex-1 w-[350px] rounded-2xl p-2 flex items-center justify-end gap-4">
+                                            <div className="h-10 flex-1 md:w-[350px] min-w-[200px] w-full rounded-2xl p-2 flex items-center justify-end gap-4">
                                                 <a
                                                     href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`}
                                                     className={`${chat.message ? "hidden" : ""} h-10 w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
@@ -209,7 +210,7 @@ const RoomPage = ({ socket }) => {
                             </div>
                         </div>
                         <div className="flex flex-col gap-5 w-full">
-                            <form className="flex justify-evenly w-full pb-[52px]" onSubmit={handleSubmit} encType="multipart/form-data">
+                            <form className="flex items-center md:justify-evenly max-md:flex-col gap-4 w-full pb-[52px]" onSubmit={handleSubmit} encType="multipart/form-data">
                                 <div className="flex items-center gap-5">
                                     <label htmlFor="description">
                                         Input Message
@@ -222,24 +223,24 @@ const RoomPage = ({ socket }) => {
                                         placeholder="Input message"
                                         className="h-[60px] w-[250px]"
                                         onChange={(e) => { setDescription(e.target.value) }} />
-                                    <div className="flex items-center gap-4">
-                                        <label htmlFor="file-upload">
-                                            Upload File
-                                        </label>
-                                        <button
-                                            onClick={handleUploadFile}
-                                            className="cursor-pointer h-[52px] w-[100px] bg-green-400 hover:bg-green-600 text-white flex items-center justify-center rounded-xl">
-                                            Choose File
-                                        </button>
-                                        <input ref={fileRef} type="file" id="file-upload" hidden onChange={(e) => { setUploadedFile(e.target.files[0]) }} />
-                                        {uploadedFile && (
-                                            <p>{uploadedFile.name}</p>
-                                        )}
-                                    </div>
+                                </div>
+                                <div className="flex flex-wrap items-center justify-center gap-4">
+                                    <label htmlFor="file-upload">
+                                        Upload File
+                                    </label>
+                                    <button
+                                        onClick={handleUploadFile}
+                                        className="cursor-pointer h-[52px] w-[100px] bg-green-400 hover:bg-green-600 text-white flex items-center justify-center rounded-xl">
+                                        Choose File
+                                    </button>
+                                    <input ref={fileRef} type="file" id="file-upload" hidden onChange={(e) => { setUploadedFile(e.target.files[0]) }} />
+                                    {uploadedFile && (
+                                        <p className="overflow-ellipsis">{uploadedFile.name}</p>
+                                    )}
                                 </div>
 
                                 <button type="submit"
-                                    className={`${(description === "" && !uploadedFile) ? "bg-gray-400 cursor-default" : "cursor-pointer bg-blue-400 hover:bg-blue-600"} h-[52px] w-[100px] text-white flex items-center justify-center rounded-xl`}>
+                                    className={`${(description === "" && !uploadedFile) ? "bg-gray-400 cursor-default" : "cursor-pointer bg-blue-400 hover:bg-blue-600"} h-[52px] md:w-[100px] w-[200px] text-white flex items-center justify-center rounded-xl`}>
                                     Send
                                 </button>
                             </form>

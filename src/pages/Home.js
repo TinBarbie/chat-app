@@ -7,7 +7,7 @@ const Home = ({ socket }) => {
 
     return (
         <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500">
-            <div className="flex flex-col items-center gap-10">
+            <div className="flex flex-col items-center gap-10 max-sm:px-4">
                 {authState.status ? (
                     <>
                         <h1 className="text-red-400 text-[52px] pb-10">

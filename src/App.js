@@ -59,8 +59,8 @@ function App() {
             </>
           ) : (
             <>
-              <Link to="/" className="hover:text-white text-2xl">Home</Link>
-              <h3 className="text-2xl">Welcome to Chat App, {authState.username}</h3>
+              <Link to="/" className="hover:text-white sm:text-2xl text-lg">Home</Link>
+              <h3 className="sm:text-2xl text-lg">Welcome, {authState.username}</h3>
               <button onClick={logout} className="h-[52px] w-[100px] bg-blue-400 hover:bg-blue-600 text-white flex items-center justify-center rounded-xl">
                 Logout
               </button>
