@@ -16,9 +16,7 @@ function Login() {
         const data = { username: username, password: password };
         try {
             await axios.post(process.env.REACT_APP_BACKEND_URL + "users/login", data).then((response) => {
-                if (response.data.error) {
-                    alert(response.data.error);
-                } else {
+                if (!response.data.error) {
                     toast.success("Login successfully!")
                     localStorage.setItem("accessToken", response.data.token);
 
@@ -29,7 +27,7 @@ function Login() {
                             status: true,
                         });
                         navigate("/");
-                    }, 2000)
+                    }, 1000)
                 }
             });
         } catch (error) {

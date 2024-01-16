@@ -10,7 +10,7 @@ function Login() {
 
     let navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async(e) => {
         e.preventDefault();
         if (password !== retypePW) {
             toast.error("Password and retyped password are incorrect! Please try again!")
@@ -18,16 +18,18 @@ function Login() {
             return;
         }
         const data = { username: username, password: password };
-        axios.post(process.env.REACT_APP_BACKEND_URL + "users", data).then((response) => {
-            if (response.data.error) {
-                toast.error(response.data.error);
-            } else {
-                toast.success("Successfully create an account!")
-                setTimeout(() => {
-                    navigate("/login");
-                }, 2000)
-            }
-        });
+        try {
+            await axios.post(process.env.REACT_APP_BACKEND_URL + "users", data).then((response) => {
+                if (!response.data.error) {
+                    toast.success("Successfully create an account!")
+                    setTimeout(() => {
+                        navigate("/login");
+                    }, 1000)
+                }
+            });
+        } catch (error) {
+            toast.error(error.response.data.error);
+        }
     };
     return (
         <div className="h-screen flex flex-col items-center justify-center bg-cyan-200">

@@ -4,12 +4,12 @@ import axios from "axios";
 import { AuthContext } from "../helpers/AuthContext";
 import toast from "react-hot-toast";
 import { ArrowDownToLine } from "lucide-react"
+import { getFileName, isImageFile } from "../helpers/ImageUtils";
 
 const RoomPage = ({ socket }) => {
     let { id } = useParams();
     let listOfColors = ["text-red-500", "text-blue-500", "text-yellow-500", "text-green-500"]
     const { authState } = useContext(AuthContext);
-
     const [chats, setChats] = useState([])
     const [description, setDescription] = useState("")
     const [uploadedFile, setUploadedFile] = useState()
@@ -58,9 +58,11 @@ const RoomPage = ({ socket }) => {
             })
         }
 
-        getChatsByRoomId(id)
-        getRoomById(id)
-    }, [id])
+        if (currentUsers.length === 0) {
+            getChatsByRoomId(id);
+            getRoomById(id);
+        }
+    }, [])
 
     useEffect(() => {
         socket.on("receive_message", (data) => {
@@ -86,6 +88,13 @@ const RoomPage = ({ socket }) => {
             socket.removeListener('kick_user')
         }
     }, [socket])
+
+    useEffect(() => {
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: "end" });
+        }
+    }, [chats])
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -128,10 +137,6 @@ const RoomPage = ({ socket }) => {
         await socket.emit("send_message", messageData)
 
         setUploadedFile(null)
-
-        if (lastMessageRef.current) {
-            lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
     }
 
     const handleLeaveRoom = async (e) => {
@@ -160,11 +165,6 @@ const RoomPage = ({ socket }) => {
         document.getElementById("file-upload").click()
     }
 
-    function getFileName(filepath) {
-        if (!filepath.includes("\\")) return filepath
-        return filepath.split("\\")[1]
-    }
-
     async function handleDownloadFile(filenameToDL, filename) {
         console.log(filename);
         const headers = new Headers();
@@ -181,9 +181,7 @@ const RoomPage = ({ socket }) => {
                 link.click();
             })
     }
-
     return (
-
         <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 md:px-10 px-4">
             <div className="flex flex-col items-center gap-10">
                 {authState.status ? (
@@ -207,19 +205,32 @@ const RoomPage = ({ socket }) => {
                             <div className="md:min-w-[450px] md:w-[500px] w-full h-[400px] overflow-y-scroll flex border border-solid border-blue-500 px-2 py-5">
                                 <div className="flex flex-col items-center gap-2 w-full">
                                     {chats.map((chat, id) => (
-                                        <div key={id} ref={id === chats.length - 1 ? lastMessageRef : null} className="flex items-center w-full justify-between">
-                                            <p className={`${listOfColors[id % 4]}`}>
+                                        <div key={id} ref={id === chats.length - 1 ? lastMessageRef : null} className="flex w-full justify-between">
+                                            <p className={`${listOfColors[id % 4]} pt-2`}>
                                                 {chat.author}:
                                             </p>
-                                            <div className="h-10 flex-1 md:w-[350px] min-w-[200px] w-full rounded-2xl p-2 flex items-center justify-end gap-4">
+                                            <div className="h-full flex-1 md:w-[350px] min-w-[200px] w-full rounded-2xl p-2 pl-4 flex justify-end gap-4">
                                                 <button
                                                     onClick={() => handleDownloadFile(chat.filename, getFileName(chat.originalName))}
-                                                    className={`${chat.message ? "hidden" : ""} h-10 w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
+                                                    className={`${chat.message ? "hidden" : ""} h-10 min-w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
                                                     <ArrowDownToLine size={20} />
                                                 </button>
-                                                <p className={`${listOfColors[id % 4]} text-right max-w-[200px]`}>
-                                                    {chat.message ? chat.message : getFileName(chat.originalName)}
-                                                </p>
+                                                {chat.message ? (
+                                                    <p className={`${listOfColors[id % 4]} text-right`}>
+                                                        {chat.message ? chat.message : getFileName(chat.originalName)}
+                                                    </p>
+                                                ) : (
+                                                    isImageFile(chat.originalName) ? (
+                                                        <a href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`}>
+                                                            <img src={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`} alt="image" className="max-w-full aspect-auto h-[200px]" />
+                                                        </a>
+                                                    ) : (
+                                                        <p className={`${listOfColors[id % 4]} text-right`}>
+                                                            {getFileName(chat.originalName)}
+                                                        </p>
+                                                    )
+                                                )}
+
                                             </div>
                                         </div>
                                     ))}
@@ -230,7 +241,7 @@ const RoomPage = ({ socket }) => {
                             <form className="flex items-center md:justify-evenly max-md:flex-col gap-4 w-full pb-[52px]" onSubmit={handleSubmit} encType="multipart/form-data">
                                 <div className="flex items-center gap-5">
                                     <label htmlFor="description">
-                                        Input Message
+                                        Input Message:
                                     </label>
                                     <textarea
                                         ref={chatRef}
@@ -238,12 +249,12 @@ const RoomPage = ({ socket }) => {
                                         name="description"
                                         id="description"
                                         placeholder="Input message"
-                                        className="h-[60px] w-[250px]"
+                                        className="h-[60px] w-[500px]"
                                         onChange={(e) => { setDescription(e.target.value) }} />
                                 </div>
-                                <div className="flex flex-wrap items-center justify-center gap-4">
+                                <div className="flex flex-wrap items-center justify-center gap-4 w-full">
                                     <label htmlFor="file-upload">
-                                        Upload File
+                                        Upload File:
                                     </label>
                                     <button
                                         onClick={handleUploadFile}
@@ -252,7 +263,7 @@ const RoomPage = ({ socket }) => {
                                     </button>
                                     <input ref={fileRef} type="file" id="file-upload" hidden onChange={(e) => { setUploadedFile(e.target.files[0]) }} />
                                     {uploadedFile && (
-                                        <p className="overflow-ellipsis">{uploadedFile.name}</p>
+                                        <p className="text-ellipsis overflow-hidden max-w-full">{uploadedFile.name}</p>
                                     )}
                                 </div>
 
