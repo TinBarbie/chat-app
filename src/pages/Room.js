@@ -221,7 +221,7 @@ const RoomPage = ({ socket }) => {
                                                     </p>
                                                 ) : (
                                                     isImageFile(chat.originalName) ? (
-                                                        <a href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`}>
+                                                        <a href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`} target="_blank">
                                                             <img src={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`} alt="image" className="max-w-full aspect-auto h-[200px]" />
                                                         </a>
                                                     ) : (
