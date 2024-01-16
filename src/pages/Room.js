@@ -120,20 +120,21 @@ const RoomPage = ({ socket }) => {
             }
         }
 
-        await axios.post(process.env.REACT_APP_BACKEND_URL + `chats`, formToSubmit).then((res) => {
-            if (!res.data.error) {
-                messageData.filename = res.data.filename
-                setChats((chats) => [...chats, messageData])
-                if (chatRef.current) {
-                    chatRef.current.value = ""
+        try {
+            await axios.post(process.env.REACT_APP_BACKEND_URL + `chats`, formToSubmit).then((res) => {
+                if (!res.data.error) {
+                    messageData.filename = res.data.filename
+                    setChats((chats) => [...chats, messageData])
+                    if (chatRef.current) {
+                        chatRef.current.value = ""
+                    }
+                    toast.success("Message is sent!")
                 }
-            }
-        }).catch(() => {
-            toast.error("Your upload file is over 1MB! Upload again with limited one")
+            })
+        } catch (error) {
+            toast.error("Uploaded file is overlimited! Try upload again with no more than 1MB")
             fileRef.current.value = null
-        }).finally(() => {
-            toast.success("Message is sent!")
-        })
+        }
         await socket.emit("send_message", messageData)
 
         setUploadedFile(null)
