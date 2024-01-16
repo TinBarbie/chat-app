@@ -42,10 +42,17 @@ function App() {
     getUserIdentity()
   }, [])
 
-  const logout = () => {
-    localStorage.removeItem("accessToken");
-    setAuthState({ username: "", id: 0, status: false });
-    toast.success("Logout successfully!")
+  const handleLogout = async () => {
+    const userData = { username: authState.username };
+    await axios.post(process.env.REACT_APP_BACKEND_URL + "users/logout", userData).then((res) => {
+      if (res.data.error) {
+        toast.error(res.data.error)
+      } else {
+        toast.success("Logout successfully!")
+        localStorage.removeItem("accessToken");
+        setAuthState({ username: "", id: 0, status: false });
+      }
+    })
   };
   return (
     <AuthContext.Provider value={{ authState, setAuthState }}>
@@ -61,7 +68,7 @@ function App() {
             <>
               <Link to="/" className="hover:text-white sm:text-2xl text-lg">Home</Link>
               <h3 className="sm:text-2xl text-lg">Welcome, {authState.username}</h3>
-              <button onClick={logout} className="h-[52px] w-[100px] bg-blue-400 hover:bg-blue-600 text-white flex items-center justify-center rounded-xl">
+              <button onClick={handleLogout} className="h-[52px] w-[100px] bg-blue-400 hover:bg-blue-600 text-white flex items-center justify-center rounded-xl">
                 Logout
               </button>
             </>
