@@ -105,9 +105,6 @@ const RoomPage = ({ socket }) => {
         let messageData
 
         if (!uploadedFile) {
-            if (chatRef.current) {
-                chatRef.current.value = ""
-            }
             formToSubmit.append("description", description)
             messageData = {
                 room: room.name,
@@ -127,6 +124,9 @@ const RoomPage = ({ socket }) => {
             if (!res.data.error) {
                 messageData.filename = res.data.filename
                 setChats((chats) => [...chats, messageData])
+                if (chatRef.current) {
+                    chatRef.current.value = ""
+                }
             }
         }).catch(() => {
             toast.error("Your upload file is over 1MB! Upload again with limited one")
@@ -237,10 +237,10 @@ const RoomPage = ({ socket }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-5 w-full">
-                            <form className="flex items-center md:justify-evenly max-md:flex-col gap-4 w-full pb-[52px]" onSubmit={handleSubmit} encType="multipart/form-data">
-                                <div className="flex items-center gap-5">
-                                    <label htmlFor="description">
+                        <div className="flex flex-col gap-5 w-full max-w-[1280px]">
+                            <form className="flex max-xl:flex-col items-center md:justify-evenly max-md:flex-col gap-4 w-full pb-[52px]" onSubmit={handleSubmit} encType="multipart/form-data">
+                                <div className="flex items-center gap-5 max-sm:w-full">
+                                    <label htmlFor="description" className="max-sm:hidden">
                                         Input Message:
                                     </label>
                                     <textarea
@@ -249,7 +249,7 @@ const RoomPage = ({ socket }) => {
                                         name="description"
                                         id="description"
                                         placeholder="Input message"
-                                        className="h-[60px] w-[500px]"
+                                        className="h-[60px] w-[500px] max-sm:w-full"
                                         onChange={(e) => { setDescription(e.target.value) }} />
                                 </div>
                                 <div className="flex flex-wrap items-center justify-center gap-4 w-full">
@@ -268,7 +268,7 @@ const RoomPage = ({ socket }) => {
                                 </div>
 
                                 <button type="submit"
-                                    className={`${(description === "" && !uploadedFile) ? "bg-gray-400 cursor-default" : "cursor-pointer bg-blue-400 hover:bg-blue-600"} h-[52px] md:w-[100px] w-[200px] text-white flex items-center justify-center rounded-xl`}>
+                                    className={`${(description === "" && !uploadedFile) ? "bg-gray-400 cursor-default" : "cursor-pointer bg-blue-400 hover:bg-blue-600"} h-[52px] md:w-[100px] min-w-[150px] text-white flex items-center justify-center rounded-xl`}>
                                     Send
                                 </button>
                             </form>
