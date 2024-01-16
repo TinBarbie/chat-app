@@ -165,6 +165,23 @@ const RoomPage = ({ socket }) => {
         return filepath.split("\\")[1]
     }
 
+    async function handleDownloadFile(filenameToDL, filename) {
+        console.log(filename);
+        const headers = new Headers();
+        headers.append('Content-Disposition', `attachment; filename="${filename}"`);
+        fetch(`${process.env.REACT_APP_BACKEND_URL}${filenameToDL}`, {
+            headers: headers
+        })
+            .then(res => res.blob())
+            .then(blob => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute("download", filename);
+                document.body.appendChild(link);
+                link.click();
+            })
+    }
+
     return (
 
         <div className="min-w-screen min-h-screen bg-gradient-to-b from-cyan-200 to-cyan-500 md:px-10 px-4">
@@ -195,11 +212,11 @@ const RoomPage = ({ socket }) => {
                                                 {chat.author}:
                                             </p>
                                             <div className="h-10 flex-1 md:w-[350px] min-w-[200px] w-full rounded-2xl p-2 flex items-center justify-end gap-4">
-                                                <a
-                                                    href={`${process.env.REACT_APP_BACKEND_URL}${chat.filename}`}
+                                                <button
+                                                    onClick={() => handleDownloadFile(chat.filename, getFileName(chat.originalName))}
                                                     className={`${chat.message ? "hidden" : ""} h-10 w-10 bg-gray-300 hover:bg-gray-100 flex items-center justify-center rounded-lg`}>
                                                     <ArrowDownToLine size={20} />
-                                                </a>
+                                                </button>
                                                 <p className={`${listOfColors[id % 4]} text-right max-w-[200px]`}>
                                                     {chat.message ? chat.message : getFileName(chat.originalName)}
                                                 </p>
